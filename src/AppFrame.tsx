@@ -319,11 +319,6 @@ export default function AppFrame() {
                     ))}
                   </select>
                   <input className="input" placeholder="검색" style={{ width: 180 }} />
-                  {page === 'events' && (
-                    <button className="btn primary" onClick={() => setIsCreateModalOpen(true)}>
-                      추가
-                    </button>
-                  )}
                 </>
               )}
               {page === 'events' && (
