@@ -113,6 +113,8 @@ export default function EventsPage({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [approvingIds, setApprovingIds] = useState<Set<number>>(new Set());
+  const selectAllRef = useRef<HTMLInputElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const formatDateTime = (iso: string | null): string => {
@@ -213,16 +215,25 @@ export default function EventsPage({
       }
     };
     fetchCount();
-  }, [statusFilter, statusGroupFilter, eventTypeFilter, hostIdFilter]);
+  }, []);
 
   // 필터 변경 시 초기화
   useEffect(() => {
     setItems([]);
     setHasMore(true);
     setNextCursor(null);
+    setSelected(new Set());
     // 초기 로드
     loadMore(null, true);
-  }, [sortField, _sortDirection, filterApproved, statusFilter, statusGroupFilter, eventTypeFilter, hostIdFilter, loadMore]);
+  }, [loadMore]);
+
+  useEffect(() => {
+    setSelected(prev => {
+      const itemIds = new Set(items.map(item => item.id));
+      const next = new Set(Array.from(prev).filter(id => itemIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [items]);
 
   // 무한 스크롤 옵저버
   useEffect(() => {
@@ -242,7 +253,7 @@ export default function EventsPage({
     }
 
     return () => observer.disconnect();
-  }, [hasMore, loadMore, nextCursor]);
+  }, [hasMore, loadMore, loading, nextCursor]);
 
   const toggleSelect = (id: number) => {
     setSelected(prev => {
@@ -251,6 +262,105 @@ export default function EventsPage({
       else next.add(id);
       return next;
     });
+  };
+
+  const selectableIds = items.map(item => item.id);
+  const selectableIdSet = new Set(selectableIds);
+  const selectedLoadedCount = selectableIds.filter(id => selected.has(id)).length;
+  const isAllSelected = selectableIds.length > 0 && selectedLoadedCount === selectableIds.length;
+  const isIndeterminate = selectedLoadedCount > 0 && selectedLoadedCount < selectableIds.length;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = isIndeterminate;
+    }
+  }, [isIndeterminate]);
+
+  const toggleSelectAll = () => {
+    setSelected(prev => {
+      if (isAllSelected) {
+        return new Set(Array.from(prev).filter(id => !selectableIdSet.has(id)));
+      }
+
+      const next = new Set(prev);
+      selectableIds.forEach(id => {
+        next.add(id);
+      });
+      return next;
+    });
+  };
+
+  const approveSelected = useCallback(
+    async (eventIds: number[]) => {
+      const pendingIds = eventIds.filter(id => !approvingIds.has(id));
+      if (pendingIds.length === 0) return;
+
+      setApprovingIds(prev => {
+        const next = new Set(prev);
+        pendingIds.forEach(id => {
+          next.add(id);
+        });
+        return next;
+      });
+
+      const results = await Promise.allSettled(pendingIds.map(id => approveEvent(id)));
+      const succeededIds: number[] = [];
+      const failedIds: number[] = [];
+      let firstErrorMessage: string | null = null;
+
+      results.forEach((result, index) => {
+        const id = pendingIds[index];
+        if (result.status === 'fulfilled') {
+          succeededIds.push(id);
+          return;
+        }
+
+        failedIds.push(id);
+        if (!firstErrorMessage) {
+          firstErrorMessage = result.reason instanceof Error ? result.reason.message : '승인에 실패했습니다';
+        }
+      });
+
+      if (succeededIds.length > 0) {
+        setItems(prev => prev.filter(item => !succeededIds.includes(item.id)));
+      }
+
+      setSelected(prev => {
+        const next = new Set(prev);
+        succeededIds.forEach(id => {
+          next.delete(id);
+        });
+        return next;
+      });
+
+      setApprovingIds(prev => {
+        const next = new Set(prev);
+        pendingIds.forEach(id => {
+          next.delete(id);
+        });
+        return next;
+      });
+
+      if (failedIds.length === 0) {
+        alert(pendingIds.length === 1 ? '승인 완료' : `${succeededIds.length}개의 행사를 승인했습니다.`);
+        return;
+      }
+
+      const summary = `${succeededIds.length}개 승인, ${failedIds.length}개 실패`;
+      alert(firstErrorMessage ? `${summary}\n${firstErrorMessage}` : summary);
+    },
+    [approvingIds]
+  );
+
+  const onApproveSelected = async () => {
+    const selectedIds = selectableIds.filter(id => selected.has(id));
+    if (selectedIds.length === 0) return;
+
+    if (!confirm(`선택된 ${selectedIds.length}개의 행사를 승인하시겠습니까?`)) {
+      return;
+    }
+
+    await approveSelected(selectedIds);
   };
 
   const onDeleteSelected = async () => {
@@ -316,14 +426,43 @@ export default function EventsPage({
         💡 제목을 클릭하면 행사 링크가 새 탭에서 열립니다.
       </div>
 
+      {approveMode ? (
+        <div
+          style={{
+            padding: '8px 12px',
+            background: '#fff7ed',
+            borderBottom: '1px solid var(--border)',
+            fontSize: '13px',
+            color: '#9a3412',
+          }}
+        >
+          💡 전체 선택은 현재 화면에 로드된 제보 행사에만 적용됩니다.
+        </div>
+      ) : null}
+
       <div style={{ overflow: 'auto', flex: 1, position: 'relative' }}>
         <table className="grid-table">
           <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#f6f8fb' }}>
             <tr>
               <th style={{ width: 44, textAlign: 'center' }}>
-                <button className={selected.size > 0 ? 'btn primary' : 'btn'} onClick={onDeleteSelected} disabled={selected.size === 0}>
-                  삭제
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
+                    disabled={selectableIds.length === 0 || approvingIds.size > 0}
+                    aria-label="전체 선택"
+                  />
+                  {approveMode ? (
+                    <button type="button" className={selected.size > 0 ? 'btn primary' : 'btn'} onClick={onApproveSelected} disabled={selected.size === 0 || approvingIds.size > 0}>
+                      승인
+                    </button>
+                  ) : null}
+                  <button type="button" className={selected.size > 0 ? 'btn primary' : 'btn'} onClick={onDeleteSelected} disabled={selected.size === 0 || approvingIds.size > 0}>
+                    삭제
+                  </button>
+                </div>
               </th>
               <th style={{ width: 28 }}>ID</th>
               <th style={{ width: 60 }}>썸네일</th>
@@ -343,13 +482,13 @@ export default function EventsPage({
           <tbody>
             {items.length === 0 && !loading ? (
               <tr>
-                <td colSpan={13}>데이터가 없습니다</td>
+                  <td colSpan={14}>데이터가 없습니다</td>
               </tr>
             ) : (
               items.map(ev => (
                 <tr key={ev.id}>
                   <td style={{ width: 44, textAlign: 'center' }}>
-                    <input type="checkbox" checked={selected.has(ev.id)} onChange={() => toggleSelect(ev.id)} />
+                    <input type="checkbox" checked={selected.has(ev.id)} onChange={() => toggleSelect(ev.id)} disabled={approvingIds.has(ev.id)} />
                   </td>
                   <td>{ev.id}</td>
                   <td>
@@ -470,30 +609,26 @@ export default function EventsPage({
                   <td style={{ textAlign: 'center' }}>
                     {approveMode ? (
                       <button
+                        type="button"
                         onClick={async () => {
-                          try {
-                            await approveEvent(ev.id);
-                            // 승인 성공 시 목록에서 제거 (미승인 목록이므로)
-                            setItems(prev => prev.filter(item => item.id !== ev.id));
-                            alert('승인 완료');
-                          } catch (e: any) {
-                            alert(e?.message || '승인에 실패했습니다');
-                          }
+                          await approveSelected([ev.id]);
                         }}
+                        disabled={approvingIds.has(ev.id)}
                         style={{
                           padding: '4px 8px',
                           border: '1px solid var(--primary)',
                           borderRadius: 4,
-                          background: 'var(--primary)',
+                          background: approvingIds.has(ev.id) ? '#94a3b8' : 'var(--primary)',
                           color: 'white',
-                          cursor: 'pointer',
+                          cursor: approvingIds.has(ev.id) ? 'not-allowed' : 'pointer',
                           fontSize: '12px',
                         }}
                       >
-                        승인
+                        {approvingIds.has(ev.id) ? '승인중' : '승인'}
                       </button>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => onEditEvent?.(ev)}
                         style={{
                           padding: '4px 8px',
