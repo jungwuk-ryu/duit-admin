@@ -51,6 +51,7 @@ export default function UpdateEventModal({
 
   const [hosts, setHosts] = useState<HostResponse[]>([]);
   const [loadingHosts, setLoadingHosts] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // 주최기관 목록 로드
   useEffect(() => {
@@ -167,8 +168,10 @@ export default function UpdateEventModal({
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
 
     if (!eventData) return;
 
@@ -232,7 +235,12 @@ export default function UpdateEventModal({
       submitData.append("hostThumbnail", formData.hostThumbnail);
     }
 
-    onSubmit(eventData.id, submitData);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(eventData.id, submitData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen || !eventData) return null;
@@ -252,13 +260,17 @@ export default function UpdateEventModal({
             행사 수정
           </h2>
           <button
+            type="button"
             onClick={onClose}
+            disabled={isSubmitting}
+            aria-disabled={isSubmitting}
             style={{
               background: "none",
               border: "none",
               fontSize: "24px",
-              cursor: "pointer",
-              color: "#666",
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+              color: isSubmitting ? "#9ca3af" : "#666",
+              opacity: isSubmitting ? 0.7 : 1,
             }}
           >
             ×
@@ -270,6 +282,7 @@ export default function UpdateEventModal({
             {/* 행사 제목 */}
             <div style={{ gridColumn: "1 / -1" }}>
               <label
+                htmlFor="update-event-title"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -280,6 +293,7 @@ export default function UpdateEventModal({
                 행사 제목 *
               </label>
               <input
+                id="update-event-title"
                 type="text"
                 name="title"
                 value={formData.title}
@@ -299,6 +313,7 @@ export default function UpdateEventModal({
             {/* 행사 시작일 */}
             <div>
               <label
+                htmlFor="update-event-start-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -309,6 +324,7 @@ export default function UpdateEventModal({
                 행사 시작일 *
               </label>
               <input
+                id="update-event-start-at"
                 type="datetime-local"
                 name="startAt"
                 value={formData.startAt}
@@ -329,6 +345,7 @@ export default function UpdateEventModal({
             {/* 행사 종료일 */}
             <div>
               <label
+                htmlFor="update-event-end-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -339,6 +356,7 @@ export default function UpdateEventModal({
                 행사 종료일
               </label>
               <input
+                id="update-event-end-at"
                 type="datetime-local"
                 name="endAt"
                 value={formData.endAt || ""}
@@ -358,6 +376,7 @@ export default function UpdateEventModal({
             {/* 모집 시작일 */}
             <div>
               <label
+                htmlFor="update-event-recruitment-start-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -368,6 +387,7 @@ export default function UpdateEventModal({
                 모집 시작일
               </label>
               <input
+                id="update-event-recruitment-start-at"
                 type="datetime-local"
                 name="recruitmentStartAt"
                 value={formData.recruitmentStartAt || ""}
@@ -387,6 +407,7 @@ export default function UpdateEventModal({
             {/* 모집 종료일 */}
             <div>
               <label
+                htmlFor="update-event-recruitment-end-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -397,6 +418,7 @@ export default function UpdateEventModal({
                 모집 종료일
               </label>
               <input
+                id="update-event-recruitment-end-at"
                 type="datetime-local"
                 name="recruitmentEndAt"
                 value={formData.recruitmentEndAt || ""}
@@ -416,6 +438,7 @@ export default function UpdateEventModal({
             {/* 행사 URL */}
             <div style={{ gridColumn: "1 / -1" }}>
               <label
+                htmlFor="update-event-uri"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -426,6 +449,7 @@ export default function UpdateEventModal({
                 행사 URL *
               </label>
               <input
+                id="update-event-uri"
                 type="url"
                 name="uri"
                 value={formData.uri}
@@ -445,6 +469,7 @@ export default function UpdateEventModal({
             {/* 행사 유형 */}
             <div>
               <label
+                htmlFor="update-event-type"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -455,6 +480,7 @@ export default function UpdateEventModal({
                 행사 유형 *
               </label>
               <select
+                id="update-event-type"
                 name="eventType"
                 value={formData.eventType}
                 onChange={handleInputChange}
@@ -483,7 +509,7 @@ export default function UpdateEventModal({
 
             {/* 주최기관 선택 방식 */}
             <div style={{ gridColumn: "1 / -1" }}>
-              <label
+              <div
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -492,7 +518,7 @@ export default function UpdateEventModal({
                 }}
               >
                 주최기관 *
-              </label>
+              </div>
               <div
                 style={{ display: "flex", gap: "12px", marginBottom: "12px" }}
               >
@@ -525,6 +551,7 @@ export default function UpdateEventModal({
               {/* 기존 주최기관 선택 */}
               {formData.hostMode === "select" && (
                 <select
+                  id="update-event-host-id"
                   name="hostId"
                   value={formData.hostId}
                   onChange={(e) => handleInputChange(e)}
@@ -553,6 +580,7 @@ export default function UpdateEventModal({
               {/* 새 주최기관 생성 */}
               {formData.hostMode === "create" && (
                 <input
+                  id="update-event-host-name"
                   type="text"
                   name="hostName"
                   value={formData.hostName}
@@ -574,6 +602,7 @@ export default function UpdateEventModal({
             {/* 행사 썸네일 */}
             <div>
               <label
+                htmlFor="update-event-thumbnail"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -584,6 +613,7 @@ export default function UpdateEventModal({
                 행사 썸네일
               </label>
               <input
+                id="update-event-thumbnail"
                 type="file"
                 name="eventThumbnail"
                 accept="image/jpeg,image/jpg,image/png,image/gif"
@@ -626,6 +656,7 @@ export default function UpdateEventModal({
             {formData.hostMode === "create" && (
               <div>
                 <label
+                  htmlFor="update-event-host-thumbnail"
                   style={{
                     display: "block",
                     marginBottom: 6,
@@ -636,6 +667,7 @@ export default function UpdateEventModal({
                   주최 기관 로고
                 </label>
                 <input
+                  id="update-event-host-thumbnail"
                   type="file"
                   name="hostThumbnail"
                   accept="image/jpeg,image/jpg,image/png,image/gif"
@@ -687,32 +719,54 @@ export default function UpdateEventModal({
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
+              aria-disabled={isSubmitting}
               style={{
                 padding: "10px 20px",
                 border: "1px solid #ddd",
                 borderRadius: 6,
                 background: "white",
-                cursor: "pointer",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
                 fontSize: 14,
                 fontWeight: "500",
+                opacity: isSubmitting ? 0.7 : 1,
               }}
             >
               취소
             </button>
             <button
               type="submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
               style={{
                 padding: "10px 20px",
                 border: "none",
                 borderRadius: 6,
-                background: "var(--primary)",
+                background: isSubmitting ? "#9ca3af" : "var(--primary)",
                 color: "white",
-                cursor: "pointer",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
                 fontSize: 14,
                 fontWeight: "500",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              수정
+              {isSubmitting && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: "14px",
+                    height: "14px",
+                    border: "2px solid rgba(255, 255, 255, 0.45)",
+                    borderTop: "2px solid #ffffff",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+              )}
+              <span>{isSubmitting ? "수정 중..." : "수정"}</span>
             </button>
           </div>
         </form>
