@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { EventType, EventResponse, HostResponse } from "../api/types";
 import { getAllHosts } from "../api/hostsClient";
+import HostSearchSelect from "./HostSearchSelect";
 
 interface EventFormData {
   title: string;
@@ -135,6 +136,13 @@ export default function UpdateEventModal({
     }));
   };
 
+  const handleHostSelectChange = (hostId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      hostId,
+    }));
+  };
+
   const validateDates = (): boolean => {
     const start = new Date(formData.startAt);
     const end = formData.endAt ? new Date(formData.endAt) : null;
@@ -252,6 +260,7 @@ export default function UpdateEventModal({
             행사 수정
           </h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: "none",
@@ -524,30 +533,12 @@ export default function UpdateEventModal({
 
               {/* 기존 주최기관 선택 */}
               {formData.hostMode === "select" && (
-                <select
-                  name="hostId"
+                <HostSearchSelect
+                  hosts={hosts}
+                  loading={loadingHosts}
                   value={formData.hostId}
-                  onChange={(e) => handleInputChange(e)}
-                  required
-                  disabled={loadingHosts}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: 6,
-                    fontSize: 14,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value={0}>
-                    {loadingHosts ? "로딩 중..." : "주최기관을 선택하세요"}
-                  </option>
-                  {hosts.map((host) => (
-                    <option key={host.id} value={host.id}>
-                      {host.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleHostSelectChange}
+                />
               )}
 
               {/* 새 주최기관 생성 */}

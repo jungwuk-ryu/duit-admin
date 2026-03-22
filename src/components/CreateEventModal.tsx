@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EventType, HostResponse } from '../api/types';
 import { getAllHosts } from '../api/hostsClient';
+import HostSearchSelect from './HostSearchSelect';
 
 interface Props {
   isOpen: boolean;
@@ -196,6 +197,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
         >
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>행사 생성</h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: 'none',
@@ -451,24 +453,12 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
 
               {/* 기존 주최기관 선택 */}
               {formData.hostMode === 'select' && (
-                <select
+                <HostSearchSelect
+                  hosts={hosts}
+                  loading={loadingHosts}
                   value={formData.hostId}
-                  onChange={e => handleInputChange('hostId', e.target.value)}
-                  className="select"
-                  style={{
-                    width: '100%',
-                    boxSizing: 'border-box',
-                  }}
-                  required
-                  disabled={loadingHosts}
-                >
-                  <option value={0}>{loadingHosts ? '로딩 중...' : '주최기관을 선택하세요'}</option>
-                  {hosts.map(host => (
-                    <option key={host.id} value={host.id}>
-                      {host.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={hostId => handleInputChange('hostId', String(hostId))}
+                />
               )}
 
               {/* 새 주최기관 생성 */}

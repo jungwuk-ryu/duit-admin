@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { EventType, HostResponse } from "../api/types";
 import { submitEvent } from "../api/submissionClient";
 import { getAllHostsPublic } from "../api/hostsClient";
+import HostSearchSelect from "../components/HostSearchSelect";
 
 interface SubmissionFormData {
   // 행사 기본 정보
@@ -267,6 +268,7 @@ export default function EventSubmissionPage() {
             검토 후 승인되면 공개됩니다.
           </p>
           <button
+            type="button"
             onClick={resetForm}
             style={{
               background: "var(--primary)",
@@ -720,31 +722,12 @@ export default function EventSubmissionPage() {
 
                   {/* 기존 주최기관 선택 */}
                   {formData.hostMode === "select" && (
-                    <select
+                    <HostSearchSelect
+                      hosts={hosts}
+                      loading={loadingHosts}
                       value={formData.hostId}
-                      onChange={(e) =>
-                        handleInputChange("hostId", e.target.value)
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "14px 16px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "8px",
-                        fontSize: "16px",
-                        boxSizing: "border-box",
-                        minHeight: "44px",
-                      }}
-                      disabled={loadingHosts}
-                    >
-                      <option value={0}>
-                        {loadingHosts ? "로딩 중..." : "주최기관을 선택하세요"}
-                      </option>
-                      {hosts.map((host) => (
-                        <option key={host.id} value={host.id}>
-                          {host.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(hostId) => handleInputChange("hostId", String(hostId))}
+                    />
                   )}
 
                   {/* 새 주최기관 생성 */}
