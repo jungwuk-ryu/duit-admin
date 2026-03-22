@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { EventType, HostResponse } from "../api/types";
+import { EventType, EVENT_TYPE_LABEL, HostResponse } from "../api/types";
 import { submitEvent } from "../api/submissionClient";
 import { getAllHostsPublic } from "../api/hostsClient";
 
@@ -23,18 +23,10 @@ interface SubmissionFormData {
   hostThumbnail?: File;
 }
 
-const EVENT_TYPE_OPTIONS = [
-  { value: EventType.CONFERENCE, label: "컨퍼런스/학술대회" },
-  { value: EventType.SEMINAR, label: "세미나" },
-  { value: EventType.WEBINAR, label: "웨비나" },
-  { value: EventType.WORKSHOP, label: "워크숍" },
-  { value: EventType.CONTEST, label: "공모전" },
-  { value: EventType.CONTINUING_EDUCATION, label: "보수교육" },
-  { value: EventType.EDUCATION, label: "교육" },
-  { value: EventType.VOLUNTEER, label: "봉사" },
-  { value: EventType.TRAINING, label: "연수" },
-  { value: EventType.ETC, label: "기타" },
-];
+const EVENT_TYPE_OPTIONS = Object.values(EventType).map((value) => ({
+  value,
+  label: EVENT_TYPE_LABEL[value],
+}));
 
 export default function EventSubmissionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -267,6 +259,7 @@ export default function EventSubmissionPage() {
             검토 후 승인되면 공개됩니다.
           </p>
           <button
+            type="button"
             onClick={resetForm}
             style={{
               background: "var(--primary)",
@@ -358,6 +351,7 @@ export default function EventSubmissionPage() {
                 {/* 행사 제목 */}
                 <div>
                   <label
+                    htmlFor="submission-event-title"
                     style={{
                       display: "block",
                       marginBottom: "8px",
@@ -369,6 +363,7 @@ export default function EventSubmissionPage() {
                     행사 제목 *
                   </label>
                   <input
+                    id="submission-event-title"
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
@@ -406,6 +401,7 @@ export default function EventSubmissionPage() {
                 >
                   <div>
                     <label
+                      htmlFor="submission-event-start-at"
                       style={{
                         display: "block",
                         marginBottom: "8px",
@@ -417,6 +413,7 @@ export default function EventSubmissionPage() {
                       행사 시작일 *
                     </label>
                     <input
+                      id="submission-event-start-at"
                       type="datetime-local"
                       value={formData.startAt}
                       onChange={(e) =>
@@ -446,6 +443,7 @@ export default function EventSubmissionPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="submission-event-end-at"
                       style={{
                         display: "block",
                         marginBottom: "8px",
@@ -457,6 +455,7 @@ export default function EventSubmissionPage() {
                       행사 종료일
                     </label>
                     <input
+                      id="submission-event-end-at"
                       type="datetime-local"
                       value={formData.endAt}
                       onChange={(e) =>
@@ -496,6 +495,7 @@ export default function EventSubmissionPage() {
                 >
                   <div>
                     <label
+                      htmlFor="submission-event-recruitment-start-at"
                       style={{
                         display: "block",
                         marginBottom: "8px",
@@ -507,6 +507,7 @@ export default function EventSubmissionPage() {
                       모집 시작일
                     </label>
                     <input
+                      id="submission-event-recruitment-start-at"
                       type="datetime-local"
                       value={formData.recruitmentStartAt}
                       onChange={(e) =>
@@ -525,6 +526,7 @@ export default function EventSubmissionPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="submission-event-recruitment-end-at"
                       style={{
                         display: "block",
                         marginBottom: "8px",
@@ -536,6 +538,7 @@ export default function EventSubmissionPage() {
                       모집 종료일
                     </label>
                     <input
+                      id="submission-event-recruitment-end-at"
                       type="datetime-local"
                       value={formData.recruitmentEndAt}
                       onChange={(e) =>
@@ -568,6 +571,7 @@ export default function EventSubmissionPage() {
                 {/* 행사 URL */}
                 <div>
                   <label
+                    htmlFor="submission-event-uri"
                     style={{
                       display: "block",
                       marginBottom: "8px",
@@ -579,6 +583,7 @@ export default function EventSubmissionPage() {
                     행사 URL *
                   </label>
                   <input
+                    id="submission-event-uri"
                     type="url"
                     value={formData.uri}
                     onChange={(e) => handleInputChange("uri", e.target.value)}
@@ -609,6 +614,7 @@ export default function EventSubmissionPage() {
                 {/* 행사 유형 */}
                 <div>
                   <label
+                    htmlFor="submission-event-type"
                     style={{
                       display: "block",
                       marginBottom: "8px",
@@ -620,6 +626,7 @@ export default function EventSubmissionPage() {
                     행사 유형 *
                   </label>
                   <select
+                    id="submission-event-type"
                     value={formData.eventType}
                     onChange={(e) =>
                       handleInputChange(
@@ -647,7 +654,7 @@ export default function EventSubmissionPage() {
 
                 {/* 주최기관 선택 */}
                 <div>
-                  <label
+                  <div
                     style={{
                       display: "block",
                       marginBottom: "8px",
@@ -657,7 +664,7 @@ export default function EventSubmissionPage() {
                     }}
                   >
                     주최기관 *
-                  </label>
+                  </div>
                   <div
                     style={{
                       display: "flex",
@@ -721,6 +728,7 @@ export default function EventSubmissionPage() {
                   {/* 기존 주최기관 선택 */}
                   {formData.hostMode === "select" && (
                     <select
+                      id="submission-host-id"
                       value={formData.hostId}
                       onChange={(e) =>
                         handleInputChange("hostId", e.target.value)
@@ -750,6 +758,7 @@ export default function EventSubmissionPage() {
                   {/* 새 주최기관 생성 */}
                   {formData.hostMode === "create" && (
                     <input
+                      id="submission-host-name"
                       type="text"
                       value={formData.hostName}
                       onChange={(e) =>
@@ -822,6 +831,7 @@ export default function EventSubmissionPage() {
                     {/* 행사 썸네일 */}
                     <div>
                       <label
+                        htmlFor="submission-event-thumbnail"
                         style={{
                           display: "block",
                           marginBottom: "8px",
@@ -833,6 +843,7 @@ export default function EventSubmissionPage() {
                         행사 썸네일
                       </label>
                       <input
+                        id="submission-event-thumbnail"
                         type="file"
                         accept="image/*"
                         onChange={(e) =>
@@ -864,6 +875,7 @@ export default function EventSubmissionPage() {
                     {formData.hostMode === "create" && (
                       <div>
                         <label
+                          htmlFor="submission-host-thumbnail"
                           style={{
                             display: "block",
                             marginBottom: "8px",
@@ -875,6 +887,7 @@ export default function EventSubmissionPage() {
                           주최기관 로고
                         </label>
                         <input
+                          id="submission-host-thumbnail"
                           type="file"
                           accept="image/*"
                           onChange={(e) =>

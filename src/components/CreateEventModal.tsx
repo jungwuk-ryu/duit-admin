@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EventType, HostResponse } from '../api/types';
+import { EventType, EVENT_TYPE_LABEL, HostResponse } from '../api/types';
 import { getAllHosts } from '../api/hostsClient';
 
 interface Props {
@@ -23,18 +23,10 @@ interface EventFormData {
   hostThumbnail?: File;
 }
 
-const EVENT_TYPE_OPTIONS = [
-  { value: EventType.CONFERENCE, label: '컨퍼런스/학술대회' },
-  { value: EventType.SEMINAR, label: '세미나' },
-  { value: EventType.WEBINAR, label: '웨비나' },
-  { value: EventType.WORKSHOP, label: '워크숍' },
-  { value: EventType.CONTEST, label: '공모전' },
-  { value: EventType.CONTINUING_EDUCATION, label: '보수교육' },
-  { value: EventType.EDUCATION, label: '교육' },
-  { value: EventType.VOLUNTEER, label: '봉사' },
-  { value: EventType.TRAINING, label: '연수' },
-  { value: EventType.ETC, label: '기타' },
-];
+const EVENT_TYPE_OPTIONS = Object.values(EventType).map((value) => ({
+  value,
+  label: EVENT_TYPE_LABEL[value],
+}));
 
 export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
   const [formData, setFormData] = useState<EventFormData>({
@@ -196,6 +188,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
         >
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>행사 생성</h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: 'none',
@@ -214,6 +207,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             {/* 제목 */}
             <div>
               <label
+                htmlFor="create-event-title"
                 style={{
                   display: 'block',
                   marginBottom: '6px',
@@ -224,6 +218,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                 제목 *
               </label>
               <input
+                id="create-event-title"
                 type="text"
                 value={formData.title}
                 onChange={e => handleInputChange('title', e.target.value)}
@@ -240,6 +235,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             <div className="modal-grid-2" style={{ gap: '20px' }}>
               <div style={{ minWidth: '0' }}>
                 <label
+                  htmlFor="create-event-start-at"
                   style={{
                     display: 'block',
                     marginBottom: '6px',
@@ -250,6 +246,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                   행사 시작일 *
                 </label>
                 <input
+                  id="create-event-start-at"
                   type="datetime-local"
                   value={formData.startAt}
                   onChange={e => handleInputChange('startAt', e.target.value)}
@@ -275,6 +272,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
               </div>
               <div style={{ minWidth: '0' }}>
                 <label
+                  htmlFor="create-event-end-at"
                   style={{
                     display: 'block',
                     marginBottom: '6px',
@@ -285,6 +283,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                   행사 종료일
                 </label>
                 <input
+                  id="create-event-end-at"
                   type="datetime-local"
                   value={formData.endAt || ''} // null일 경우 빈 문자열
                   onChange={e => handleInputChange('endAt', e.target.value)}
@@ -314,6 +313,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             <div className="modal-grid-2" style={{ gap: '20px' }}>
               <div style={{ minWidth: '0' }}>
                 <label
+                  htmlFor="create-event-recruitment-start-at"
                   style={{
                     display: 'block',
                     marginBottom: '6px',
@@ -324,6 +324,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                   모집 시작일
                 </label>
                 <input
+                  id="create-event-recruitment-start-at"
                   type="datetime-local"
                   value={formData.recruitmentStartAt || ''} // null일 경우 빈 문자열
                   onChange={e => handleInputChange('recruitmentStartAt', e.target.value)}
@@ -337,6 +338,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
               </div>
               <div style={{ minWidth: '0' }}>
                 <label
+                  htmlFor="create-event-recruitment-end-at"
                   style={{
                     display: 'block',
                     marginBottom: '6px',
@@ -347,6 +349,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                   모집 종료일
                 </label>
                 <input
+                  id="create-event-recruitment-end-at"
                   type="datetime-local"
                   value={formData.recruitmentEndAt || ''} // null일 경우 빈 문자열
                   onChange={e => handleInputChange('recruitmentEndAt', e.target.value)}
@@ -374,6 +377,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             {/* 행사 URL */}
             <div>
               <label
+                htmlFor="create-event-uri"
                 style={{
                   display: 'block',
                   marginBottom: '6px',
@@ -384,6 +388,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                 행사 URL *
               </label>
               <input
+                id="create-event-uri"
                 type="url"
                 value={formData.uri}
                 onChange={e => handleInputChange('uri', e.target.value)}
@@ -400,6 +405,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             {/* 행사 유형 */}
             <div>
               <label
+                htmlFor="create-event-type"
                 style={{
                   display: 'block',
                   marginBottom: '6px',
@@ -410,6 +416,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                 행사 유형 *
               </label>
               <select
+                id="create-event-type"
                 value={formData.eventType}
                 onChange={e => handleInputChange('eventType', e.target.value as EventType)}
                 className="select"
@@ -429,7 +436,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
 
             {/* 주최기관 선택 방식 */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label
+              <div
                 style={{
                   display: 'block',
                   marginBottom: '6px',
@@ -438,7 +445,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                 }}
               >
                 주최기관 *
-              </label>
+              </div>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <input type="radio" name="hostMode" value="select" checked={formData.hostMode === 'select'} onChange={e => handleInputChange('hostMode', e.target.value)} />
@@ -452,6 +459,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
               {/* 기존 주최기관 선택 */}
               {formData.hostMode === 'select' && (
                 <select
+                  id="create-event-host-id"
                   value={formData.hostId}
                   onChange={e => handleInputChange('hostId', e.target.value)}
                   className="select"
@@ -474,6 +482,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
               {/* 새 주최기관 생성 */}
               {formData.hostMode === 'create' && (
                 <input
+                  id="create-event-host-name"
                   type="text"
                   value={formData.hostName}
                   onChange={e => handleInputChange('hostName', e.target.value)}
@@ -492,6 +501,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
             <div className="modal-grid-2" style={{ gap: '20px' }}>
               <div style={{ minWidth: '0' }}>
                 <label
+                  htmlFor="create-event-thumbnail"
                   style={{
                     display: 'block',
                     marginBottom: '6px',
@@ -502,6 +512,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                   행사 썸네일
                 </label>
                 <input
+                  id="create-event-thumbnail"
                   type="file"
                   accept="image/*"
                   onChange={e => handleInputChange('eventThumbnail', e.target.files?.[0] || new File([], ''))}
@@ -517,6 +528,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
               {formData.hostMode === 'create' && (
                 <div style={{ minWidth: '0' }}>
                   <label
+                    htmlFor="create-host-thumbnail"
                     style={{
                       display: 'block',
                       marginBottom: '6px',
@@ -527,6 +539,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: Props) {
                     주최기관 로고
                   </label>
                   <input
+                    id="create-host-thumbnail"
                     type="file"
                     accept="image/*"
                     onChange={e => handleInputChange('hostThumbnail', e.target.files?.[0] || new File([], ''))}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { EventResponse, PaginationField, SortDirection, EventType, EventStatus, EventStatusGroup } from '../api/types';
+import { EventResponse, PaginationField, SortDirection, EventType, EVENT_TYPE_LABEL, EventStatus, EventStatusGroup } from '../api/types';
 import { getEvents, deleteEventsBatch, approveEvent, getEventsCount } from '../api/eventsClient';
 
 // 이미지 URL을 절대 경로로 변환하는 함수
@@ -213,7 +213,7 @@ export default function EventsPage({
       }
     };
     fetchCount();
-  }, [statusFilter, statusGroupFilter, eventTypeFilter, hostIdFilter]);
+  }, []);
 
   // 필터 변경 시 초기화
   useEffect(() => {
@@ -222,7 +222,7 @@ export default function EventsPage({
     setNextCursor(null);
     // 초기 로드
     loadMore(null, true);
-  }, [sortField, _sortDirection, filterApproved, statusFilter, statusGroupFilter, eventTypeFilter, hostIdFilter, loadMore]);
+  }, [loadMore]);
 
   // 무한 스크롤 옵저버
   useEffect(() => {
@@ -242,7 +242,7 @@ export default function EventsPage({
     }
 
     return () => observer.disconnect();
-  }, [hasMore, loadMore, nextCursor]);
+  }, [hasMore, loadMore, loading, nextCursor]);
 
   const toggleSelect = (id: number) => {
     setSelected(prev => {
@@ -321,7 +321,7 @@ export default function EventsPage({
           <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#f6f8fb' }}>
             <tr>
               <th style={{ width: 44, textAlign: 'center' }}>
-                <button className={selected.size > 0 ? 'btn primary' : 'btn'} onClick={onDeleteSelected} disabled={selected.size === 0}>
+                <button type="button" className={selected.size > 0 ? 'btn primary' : 'btn'} onClick={onDeleteSelected} disabled={selected.size === 0}>
                   삭제
                 </button>
               </th>
@@ -433,33 +433,7 @@ export default function EventsPage({
                     </a>
                   </td>
                   <td>{ev.host.id}</td>
-                  <td>
-                    {((): string => {
-                      switch (ev.eventType) {
-                        case EventType.CONFERENCE:
-                          return '컨퍼런스/학술대회';
-                        case EventType.SEMINAR:
-                          return '세미나';
-                        case EventType.WEBINAR:
-                          return '웨비나';
-                        case EventType.WORKSHOP:
-                          return '워크숍';
-                        case EventType.CONTEST:
-                          return '공모전';
-                        case EventType.CONTINUING_EDUCATION:
-                          return '보수교육';
-                        case EventType.EDUCATION:
-                          return '교육';
-                        case EventType.VOLUNTEER:
-                          return '봉사';
-                        case EventType.TRAINING:
-                          return '연수';
-                        case EventType.ETC:
-                        default:
-                          return '기타';
-                      }
-                    })()}
-                  </td>
+                  <td>{EVENT_TYPE_LABEL[ev.eventType]}</td>
                   <td>{formatStatus(ev.eventStatus)}</td>
                   <td>{formatStatusGroup(ev.eventStatusGroup)}</td>
                   <td>{formatDateTime(ev.recruitmentStartAt)}</td>
@@ -470,6 +444,7 @@ export default function EventsPage({
                   <td style={{ textAlign: 'center' }}>
                     {approveMode ? (
                       <button
+                        type="button"
                         onClick={async () => {
                           try {
                             await approveEvent(ev.id);
@@ -494,6 +469,7 @@ export default function EventsPage({
                       </button>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => onEditEvent?.(ev)}
                         style={{
                           padding: '4px 8px',

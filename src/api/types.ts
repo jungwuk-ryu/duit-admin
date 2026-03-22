@@ -9,6 +9,7 @@ export enum EventType {
   CONTINUING_EDUCATION = "CONTINUING_EDUCATION",
   EDUCATION = "EDUCATION",
   VOLUNTEER = "VOLUNTEER",
+  SUPPORTERS = "SUPPORTERS",
   TRAINING = "TRAINING",
   ETC = "ETC",
 }
@@ -22,6 +23,7 @@ export const EVENT_TYPE_LABEL: Record<EventType, string> = {
   [EventType.CONTINUING_EDUCATION]: "보수교육",
   [EventType.EDUCATION]: "교육",
   [EventType.VOLUNTEER]: "봉사",
+  [EventType.SUPPORTERS]: "서포터즈",
   [EventType.TRAINING]: "연수",
   [EventType.ETC]: "기타",
 };

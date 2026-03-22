@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { EventType, EventResponse, HostResponse } from "../api/types";
+import {
+  EventType,
+  EVENT_TYPE_LABEL,
+  EventResponse,
+  HostResponse,
+} from "../api/types";
 import { getAllHosts } from "../api/hostsClient";
+
+const EVENT_TYPE_OPTIONS = Object.values(EventType).map((value) => ({
+  value,
+  label: EVENT_TYPE_LABEL[value],
+}));
 
 interface EventFormData {
   title: string;
@@ -252,6 +262,7 @@ export default function UpdateEventModal({
             행사 수정
           </h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: "none",
@@ -270,6 +281,7 @@ export default function UpdateEventModal({
             {/* 행사 제목 */}
             <div style={{ gridColumn: "1 / -1" }}>
               <label
+                htmlFor="update-event-title"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -280,6 +292,7 @@ export default function UpdateEventModal({
                 행사 제목 *
               </label>
               <input
+                id="update-event-title"
                 type="text"
                 name="title"
                 value={formData.title}
@@ -299,6 +312,7 @@ export default function UpdateEventModal({
             {/* 행사 시작일 */}
             <div>
               <label
+                htmlFor="update-event-start-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -309,6 +323,7 @@ export default function UpdateEventModal({
                 행사 시작일 *
               </label>
               <input
+                id="update-event-start-at"
                 type="datetime-local"
                 name="startAt"
                 value={formData.startAt}
@@ -329,6 +344,7 @@ export default function UpdateEventModal({
             {/* 행사 종료일 */}
             <div>
               <label
+                htmlFor="update-event-end-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -339,6 +355,7 @@ export default function UpdateEventModal({
                 행사 종료일
               </label>
               <input
+                id="update-event-end-at"
                 type="datetime-local"
                 name="endAt"
                 value={formData.endAt || ""}
@@ -358,6 +375,7 @@ export default function UpdateEventModal({
             {/* 모집 시작일 */}
             <div>
               <label
+                htmlFor="update-event-recruitment-start-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -368,6 +386,7 @@ export default function UpdateEventModal({
                 모집 시작일
               </label>
               <input
+                id="update-event-recruitment-start-at"
                 type="datetime-local"
                 name="recruitmentStartAt"
                 value={formData.recruitmentStartAt || ""}
@@ -387,6 +406,7 @@ export default function UpdateEventModal({
             {/* 모집 종료일 */}
             <div>
               <label
+                htmlFor="update-event-recruitment-end-at"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -397,6 +417,7 @@ export default function UpdateEventModal({
                 모집 종료일
               </label>
               <input
+                id="update-event-recruitment-end-at"
                 type="datetime-local"
                 name="recruitmentEndAt"
                 value={formData.recruitmentEndAt || ""}
@@ -416,6 +437,7 @@ export default function UpdateEventModal({
             {/* 행사 URL */}
             <div style={{ gridColumn: "1 / -1" }}>
               <label
+                htmlFor="update-event-uri"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -426,6 +448,7 @@ export default function UpdateEventModal({
                 행사 URL *
               </label>
               <input
+                id="update-event-uri"
                 type="url"
                 name="uri"
                 value={formData.uri}
@@ -445,6 +468,7 @@ export default function UpdateEventModal({
             {/* 행사 유형 */}
             <div>
               <label
+                htmlFor="update-event-type"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -455,6 +479,7 @@ export default function UpdateEventModal({
                 행사 유형 *
               </label>
               <select
+                id="update-event-type"
                 name="eventType"
                 value={formData.eventType}
                 onChange={handleInputChange}
@@ -468,22 +493,17 @@ export default function UpdateEventModal({
                   boxSizing: "border-box",
                 }}
               >
-                <option value={EventType.CONFERENCE}>컨퍼런스/학술대회</option>
-                <option value={EventType.SEMINAR}>세미나</option>
-                <option value={EventType.WEBINAR}>웨비나</option>
-                <option value={EventType.WORKSHOP}>워크숍</option>
-                <option value={EventType.CONTEST}>공모전</option>
-                <option value={EventType.CONTINUING_EDUCATION}>보수교육</option>
-                <option value={EventType.EDUCATION}>교육</option>
-                <option value={EventType.VOLUNTEER}>봉사</option>
-                <option value={EventType.TRAINING}>연수</option>
-                <option value={EventType.ETC}>기타</option>
+                {EVENT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* 주최기관 선택 방식 */}
             <div style={{ gridColumn: "1 / -1" }}>
-              <label
+              <div
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -492,7 +512,7 @@ export default function UpdateEventModal({
                 }}
               >
                 주최기관 *
-              </label>
+              </div>
               <div
                 style={{ display: "flex", gap: "12px", marginBottom: "12px" }}
               >
@@ -525,6 +545,7 @@ export default function UpdateEventModal({
               {/* 기존 주최기관 선택 */}
               {formData.hostMode === "select" && (
                 <select
+                  id="update-event-host-id"
                   name="hostId"
                   value={formData.hostId}
                   onChange={(e) => handleInputChange(e)}
@@ -553,6 +574,7 @@ export default function UpdateEventModal({
               {/* 새 주최기관 생성 */}
               {formData.hostMode === "create" && (
                 <input
+                  id="update-event-host-name"
                   type="text"
                   name="hostName"
                   value={formData.hostName}
@@ -574,6 +596,7 @@ export default function UpdateEventModal({
             {/* 행사 썸네일 */}
             <div>
               <label
+                htmlFor="update-event-thumbnail"
                 style={{
                   display: "block",
                   marginBottom: 6,
@@ -584,6 +607,7 @@ export default function UpdateEventModal({
                 행사 썸네일
               </label>
               <input
+                id="update-event-thumbnail"
                 type="file"
                 name="eventThumbnail"
                 accept="image/jpeg,image/jpg,image/png,image/gif"
@@ -626,6 +650,7 @@ export default function UpdateEventModal({
             {formData.hostMode === "create" && (
               <div>
                 <label
+                  htmlFor="update-host-thumbnail"
                   style={{
                     display: "block",
                     marginBottom: 6,
@@ -636,6 +661,7 @@ export default function UpdateEventModal({
                   주최 기관 로고
                 </label>
                 <input
+                  id="update-host-thumbnail"
                   type="file"
                   name="hostThumbnail"
                   accept="image/jpeg,image/jpg,image/png,image/gif"
