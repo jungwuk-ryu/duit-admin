@@ -78,6 +78,8 @@ export interface EventResponse {
   eventStatusGroup?: EventStatusGroup;
   isApproved?: boolean;
   host: HostResponse;
+  // 전체 주최 목록 (첫 번째가 host). 다중 주최 이전 API 에는 없음
+  hosts?: HostResponse[];
   viewCount: number;
   isBookmarked: boolean;
   supporters?: number;

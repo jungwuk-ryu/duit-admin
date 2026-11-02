@@ -143,6 +143,10 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
     return true;
   };
 
+  // 공동 주최 (첫 번째 주최 외). 단일 주최 수정(hostId/hostName)은 서버에서 주최 목록 전체를 교체하므로,
+  // 공동 주최가 있으면 hosts 로 목록을 함께 보내 유지한다
+  const coHosts = eventData ? (eventData.hosts ?? []).filter(host => host.id !== eventData.host.id) : [];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -181,6 +185,24 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
     // FormData 생성
     const submitData = new FormData();
 
+    const uploadHostThumbnail = formData.hostMode === 'create' && formData.hostThumbnail ? formData.hostThumbnail : null;
+    const keepCoHosts = coHosts.length > 0;
+
+    // 주최: 공동 주최가 있으면 hosts(첫 번째 주최 + 공동 주최), 없으면 기존 단일 주최 필드
+    const hostFields = keepCoHosts
+      ? {
+          hosts: [
+            formData.hostMode === 'select'
+              ? { hostId: formData.hostId }
+              : { hostName: formData.hostName, ...(uploadHostThumbnail ? { thumbnailIndex: 0 } : {}) },
+            ...coHosts.filter(host => formData.hostMode !== 'select' || host.id !== formData.hostId).map(host => ({ hostId: host.id })),
+          ],
+        }
+      : {
+          ...(formData.hostMode === 'select' ? { hostId: formData.hostId } : { hostName: formData.hostName }),
+          deleteHostThumbnail: formData.deleteHostThumbnail,
+        };
+
     // JSON 데이터 추가
     const eventUpdateData = {
       title: formData.title,
@@ -190,9 +212,8 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
       recruitmentEndAt: formData.recruitmentEndAt,
       uri: formData.uri,
       eventType: formData.eventType,
-      ...(formData.hostMode === 'select' ? { hostId: formData.hostId } : { hostName: formData.hostName }),
+      ...hostFields,
       deleteEventThumbnail: formData.deleteEventThumbnail,
-      deleteHostThumbnail: formData.deleteHostThumbnail,
     };
 
     submitData.append('data', JSON.stringify(eventUpdateData));
@@ -202,8 +223,8 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
       submitData.append('eventThumbnail', formData.eventThumbnail);
     }
     // 새 주최기관 생성 시에만 주최기관 로고 업로드 가능
-    if (formData.hostMode === 'create' && formData.hostThumbnail) {
-      submitData.append('hostThumbnail', formData.hostThumbnail);
+    if (uploadHostThumbnail) {
+      submitData.append(keepCoHosts ? 'hostThumbnails' : 'hostThumbnail', uploadHostThumbnail);
     }
 
     onSubmit(eventData.id, submitData);
@@ -521,6 +542,12 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
                   }}
                 />
               )}
+
+              {coHosts.length > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                  공동 주최: {coHosts.map(host => host.name).join(', ')} (수정해도 유지됩니다)
+                </div>
+              )}
             </div>
 
             {/* 행사 썸네일 */}
@@ -593,19 +620,24 @@ export default function UpdateEventModal({ isOpen, onClose, onSubmit, eventData 
                     lineHeight: '34px',
                   }}
                 />
-                {eventData.host.thumbnail && <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>현재 로고: {eventData.host.thumbnail.split('/').pop()}</div>}
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    marginTop: 8,
-                    fontSize: 13,
-                  }}
-                >
-                  <input type="checkbox" name="deleteHostThumbnail" checked={formData.deleteHostThumbnail} onChange={handleInputChange} />
-                  주최 기관 로고 삭제
-                </label>
+                {/* 공동 주최 행사는 hosts 로 보내므로 새 주최에 기존 로고가 이어지지 않음 (업로드한 로고만 사용) */}
+                {coHosts.length === 0 && (
+                  <>
+                    {eventData.host.thumbnail && <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>현재 로고: {eventData.host.thumbnail.split('/').pop()}</div>}
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        marginTop: 8,
+                        fontSize: 13,
+                      }}
+                    >
+                      <input type="checkbox" name="deleteHostThumbnail" checked={formData.deleteHostThumbnail} onChange={handleInputChange} />
+                      주최 기관 로고 삭제
+                    </label>
+                  </>
+                )}
               </div>
             )}
           </div>
